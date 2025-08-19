@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Create GitHub Branch</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;line-height:1.5}
+    h1{font-size:1.6rem;margin-bottom:0.5rem}
+    form{display:grid;gap:12px;margin-top:12px}
+    label{font-weight:600}
+    input,button{padding:10px;border:1px solid #ddd;border-radius:10px;font-size:1rem}
+    input[type="password"]{font-family:inherit;letter-spacing:0.1px}
+    .row{display:grid;gap:8px}
+    .two{grid-template-columns:1fr 1fr}
+    .out{margin-top:18px;white-space:pre-wrap;border:1px solid #eee;border-radius:10px;padding:12px}
+    button{cursor:pointer}
+    .ok{border-color:#cfe9cf;background:#f6fffa}
+    .err{border-color:#f3c2c2;background:#fff7f7}
+    small{color:#666}
+  </style>
+</head>
+<body>
+  <h1>Create a GitHub Branch</h1>
+  <p>Provide your repo info and a Personal Access Token (Classic or Fine-grained) that has <code>repo</code> access.</p>
+
+  <form id="frm">
+    <div class="row">
+      <label>GitHub Token <small>(kept in-browser)</small></label>
+      <input type="password" id="token" placeholder="ghp_xxx or github_pat_xxx" required />
+    </div>
+
+    <div class="row two">
+      <div>
+        <label>Owner / Org</label>
+        <input id="owner" placeholder="username-or-org" required />
+      </div>
+      <div>
+        <label>Repository</label>
+        <input id="repo" placeholder="repo-name" required />
+      </div>
+    </div>
+
+    <div class="row two">
+      <div>
+        <label>Base Branch (from)</label>
+        <input id="base" placeholder="main" value="main" required />
+      </div>
+      <div>
+        <label>New Branch (to create)</label>
+        <input id="newBranch" placeholder="feature/cool-thing" required />
+      </div>
+    </div>
+
+    <button type="submit">Create Branch</button>
+  </form>
+
+  <div id="out" class="out" aria-live="polite"></div>
+
+  <script>
+    const out = document.getElementById('out');
+
+    function show(msg, ok=false){
+      out.textContent = msg;
+      out.className = 'out ' + (ok ? 'ok' : 'err');
+    }
+
+    async function createBranch({token, owner, repo, base, newBranch}) {
+      const headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28"
+      };
+
+      // 1) Get the latest commit SHA of the base branch
+      const refResp = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/ref/heads/${encodeURIComponent(base)}`, { headers });
+      if (!refResp.ok) {
+        const t = await refResp.text();
+        throw new Error(`Failed to read base ref "${base}": ${refResp.status} ${refResp.statusText}\n${t}`);
+      }
+      const refData = await refResp.json();
+      const baseSha = refData.object && refData.object.sha;
+      if (!baseSha) throw new Error("Could not find base branch SHA.");
+
+      // 2) Create the new branch ref
+      const body = JSON.stringify({
+        ref: `refs/heads/${newBranch}`,
+        sha: baseSha
+      });
+
+      const makeResp = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/refs`, {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body
+      });
+
+      const resultText = await makeResp.text();
+      if (!makeResp.ok) {
+        throw new Error(`Failed to create branch "${newBranch}": ${makeResp.status} ${makeResp.statusText}\n${resultText}`);
+      }
+
+      return JSON.parse(resultText);
+    }
+
+    document.getElementById('frm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = document.getElementById('token').value.trim();
+      const owner = document.getElementById('owner').value.trim();
+      const repo = document.getElementById('repo').value.trim();
+      const base = document.getElementById('base').value.trim();
+      const newBranch = document.getElementById('newBranch').value.trim();
+
+      out.className = 'out';
+      out.textContent = 'Working…';
+
+      try {
+        const res = await createBranch({ token, owner, repo, base, newBranch });
+        const url = `https://github.com/${owner}/${repo}/tree/${encodeURIComponent(newBranch)}`;
+        show(`✅ Branch created!\n\nName: ${newBranch}\nFrom: ${base}\nSHA: ${res.object?.sha || '(see API response)'}\n\nOpen: ${url}`, true);
+      } catch (err) {
+        show(`❌ ${err.message}`);
+      }
+    });
+  </script>
+
+  <p><small>Tip: For private repos, ensure the token has access. For fine-grained tokens, grant “Contents: Read & Write”.</small></p>
+</body>
+</html>
