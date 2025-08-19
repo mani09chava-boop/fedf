@@ -1,0 +1,101 @@
+/* ====== Global Reset ====== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f6f9;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+/* ====== Resume Container ====== */
+.resume {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+/* ====== Header ====== */
+header {
+    text-align: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 15px;
+}
+
+.name-title {
+    font-size: 2.2em;
+    color: #222;
+    margin-bottom: 8px;
+}
+
+.contact, .location {
+    font-size: 0.95em;
+    color: #555;
+}
+
+.contact a {
+    text-decoration: none;
+    color: #0077cc;
+}
+
+.contact a:hover {
+    text-decoration: underline;
+}
+
+/* ====== Section Styling ====== */
+section {
+    margin-bottom: 25px;
+}
+
+h2 {
+    font-size: 1.3em;
+    color: #0077cc;
+    margin-bottom: 10px;
+    border-left: 4px solid #0077cc;
+    padding-left: 10px;
+}
+
+p, li {
+    font-size: 1em;
+    margin-bottom: 8px;
+}
+
+ul {
+    list-style: none;
+    padding-left: 15px;
+}
+
+ul li::before {
+    content: "• ";
+    color: #0077cc;
+    font-weight: bold;
+}
+
+/* ====== Links ====== */
+a {
+    color: #0077cc;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ====== Footer ====== */
+footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.9em;
+    color: #555;
+    padding-top: 10px;
+    border-top: 2px solid #eee;
+}
